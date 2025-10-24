@@ -1,0 +1,360 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MindNova — Summarizer</title>
+<style>
+:root {
+  --bg1:#6a11cb;
+  --bg2:#2575fc;
+  --accent:#ff9800;
+}
+
+html, body {
+  height:100%;
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(135deg,var(--bg1) 0%, var(--bg2) 100%);
+  color: #0b1220;
+}
+
+.wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:28px; box-sizing:border-box; }
+
+.card { width:100%; max-width:920px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04)); border-radius:14px; padding:22px; box-shadow: 0 12px 30px rgba(10,10,20,0.35); backdrop-filter: blur(8px) saturate(120%); color: #fff; overflow:hidden; border: 1px solid rgba(255,255,255,0.06); }
+
+header.site-head { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+.logo { width:56px; height:56px; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#fff; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+.logo img { width:100%; height:100%; object-fit:cover; display:block; }
+.title { font-size:20px; font-weight:700; margin:0; color: #fff; }
+.subtitle { margin:0; color: rgba(255,255,255,0.9); font-size:13px; }
+
+main.grid { display:grid; grid-template-columns: 1fr 420px; gap:20px; align-items:start; }
+
+.panel { background: rgba(255,255,255,0.03); padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); min-height:260px; }
+
+label.small { display:block; color:rgba(255,255,255,0.85); font-size:13px; margin-bottom:8px; }
+
+textarea#inputText { width:100%; min-height:260px; resize:vertical; border-radius:8px; border: none; padding:12px; font-size:15px; color:#0b1220; background:#fff; box-sizing:border-box; }
+
+.controls { margin-top:12px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+
+select, button.primary { font-size:14px; padding:9px 12px; border-radius:8px; border:none; }
+select { background: rgba(255,255,255,0.95); color:#0b1220; }
+
+button.primary { background:var(--accent); color:#0b1220; font-weight:700; cursor:pointer; box-shadow: 0 8px 18px rgba(0,0,0,0.18); transition: background 0.2s ease; }
+button.primary:hover { background: #ffa726; }
+button.primary:active { transform:translateY(1px); }
+button.primary[disabled] { opacity: 0.7; cursor: not-allowed; }
+
+.panel-right { position:relative; padding:14px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,250,0.95)); color:#222; min-height:260px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); overflow:hidden; }
+
+.summary-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+.summary-title h3 { margin:0; color:#111; font-size:16px; }
+.summary-body { font-size:15px; color:#111; line-height:1.5; white-space:pre-wrap; max-height:220px; overflow:auto; opacity: 0; transition: opacity 0.3s ease; margin-bottom: 10px; }
+.summary-body.show { opacity: 1; }
+
+.copy-btn { background:linear-gradient(180deg,#2575fc,#1a4ad8); color:white; border:none; padding:6px 10px; border-radius:8px; font-size:13px; cursor:pointer; box-shadow: 0 6px 14px rgba(37,117,252,0.25); transition: background 0.2s ease; margin-top: 8px; }
+.copy-btn:hover { background:linear-gradient(180deg,#3b82f6,#1d4ed8); }
+
+.loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--accent); border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display:inline-block; vertical-align: middle; margin-right:6px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+strong { color: #d9534f; } /* highlighted keywords color */
+
+.word-count-info {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: rgba(37, 117, 252, 0.1);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2575fc;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.word-count-info div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.word-count-info span {
+  font-weight: 600;
+}
+
+.word-count-copy {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(37, 117, 252, 0.2);
+}
+
+.comparison-chart {
+  margin-top: 15px;
+  display: none;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 15px 12px 12px 12px;
+}
+
+.chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 25px;
+  color: #2575fc;
+  text-align: center;
+  position: relative;
+  z-index: 5;
+  padding: 5px 0;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  height: 110px;
+  gap: 30px;
+  justify-content: center;
+}
+
+.chart-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 70px;
+}
+
+.bar {
+  width: 50px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.5s ease;
+}
+
+.bar-original {
+  background: linear-gradient(to top, #6a11cb, #2575fc);
+}
+
+.bar-summary {
+  background: linear-gradient(to top, #ff9800, #ffb74d);
+}
+
+.bar-label {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.bar-value {
+  font-size: 11px;
+  margin-top: 5px;
+  color: #666;
+}
+
+@media (max-width:900px) { 
+  main.grid { grid-template-columns: 1fr; } 
+  .panel-right{ margin-top: 12px; } 
+  textarea#inputText{ min-height:180px; } 
+  .chart-bars {
+    gap: 20px;
+  }
+  .chart-bar {
+    width: 60px;
+  }
+  .bar {
+    width: 40px;
+  }
+}
+
+@media (max-width: 500px) {
+  .chart-bars {
+    gap: 15px;
+  }
+  .chart-bar {
+    width: 50px;
+  }
+  .bar {
+    width: 35px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <header class="site-head">
+      <div class="logo">
+        <img src="/static/Mindnova%202.png" alt="MindNova logo">
+      </div>
+      <div>
+        <p class="title">MindNova — Summarizer</p>
+        <p class="subtitle">Paste a paragraph and get a clear, short summary.</p>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="panel">
+        <label class="small" for="inputText">Paste your paragraph</label>
+        <form id="summaryForm">
+          <textarea id="inputText" name="paragraph" placeholder="Paste a paragraph here..." required aria-label="Paragraph to summarize"></textarea>
+
+          <div class="controls">
+            <div class="left">
+              <label class="small" for="sentences">Summary length</label>
+              <select id="sentences" name="sentences" aria-label="Number of sentences in summary">
+                <option value="2">2 sentences</option>
+                <option value="3" selected>3 sentences</option>
+                <option value="4">4 sentences</option>
+                <option value="5">5 sentences</option>
+              </select>
+            </div>
+
+            <div class="right">
+              <button class="primary" id="summarizeBtn" type="submit">Summarize</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <aside class="panel-right">
+        <div class="summary-title">
+          <h3>📚 Summary</h3>
+          <small style="color:#666;">Fast extractive summary</small>
+        </div>
+
+        <div id="summaryBody" class="summary-body">
+          <em style="color:#6b7280;">Your summary will appear here after you click Summarize.</em>
+        </div>
+
+        <div id="wordCountInfo" class="word-count-info">
+          <div>Original: <span id="originalWordCount">0</span> words</div>
+          <div>Summary: <span id="summaryWordCount">0</span> words</div>
+          <div>Reduced: <span id="reductionPercentage">0%</span></div>
+          <div class="word-count-copy">
+            <button class="copy-btn" onclick="copySummary()">Copy Summary</button>
+          </div>
+        </div>
+
+        <div id="comparisonChart" class="comparison-chart">
+          <div class="chart-title">Text Length Comparison</div>
+          <div class="chart-bars">
+            <div class="chart-bar">
+              <div class="bar bar-original" id="originalBar" style="height: 0px;"></div>
+              <div class="bar-label">Original</div>
+              <div class="bar-value" id="originalValue">0 words</div>
+            </div>
+            <div class="chart-bar">
+              <div class="bar bar-summary" id="summaryBar" style="height: 0px;"></div>
+              <div class="bar-label">Summary</div>
+              <div class="bar-value" id="summaryValue">0 words</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+</div>
+
+<script>
+function copySummary(){
+  const el = document.getElementById("summaryBody");
+  const text = el ? el.innerText.trim() : "";
+  if (!text || text.startsWith("Your summary will appear")) {
+    return alert("Nothing to copy yet.");
+  }
+  navigator.clipboard.writeText(text).then(()=> {
+    const btn = document.querySelector('.copy-btn');
+    const old = btn.innerHTML;
+    btn.innerHTML = "Copied ✓";
+    setTimeout(()=> btn.innerHTML = old, 1200);
+  }).catch(()=> alert("Copy failed (browser blocked)."));
+}
+
+function updateChart(originalCount, summaryCount) {
+  const chart = document.getElementById('comparisonChart');
+  const originalBar = document.getElementById('originalBar');
+  const summaryBar = document.getElementById('summaryBar');
+  const originalValue = document.getElementById('originalValue');
+  const summaryValue = document.getElementById('summaryValue');
+
+  // Show the chart
+  chart.style.display = 'block';
+
+  // Update values
+  originalValue.textContent = originalCount + ' words';
+  summaryValue.textContent = summaryCount + ' words';
+
+  // Calculate bar heights (max 100px)
+  const maxHeight = 100;
+  const maxCount = Math.max(originalCount, summaryCount);
+  const originalHeight = (originalCount / maxCount) * maxHeight;
+  const summaryHeight = (summaryCount / maxCount) * maxHeight;
+
+  // Animate the bars
+  setTimeout(() => {
+    originalBar.style.height = originalHeight + 'px';
+    summaryBar.style.height = summaryHeight + 'px';
+  }, 100);
+}
+
+document.getElementById("summaryForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const paragraph = document.getElementById("inputText").value.trim();
+  const sentences = document.getElementById("sentences").value;
+  const summaryEl = document.getElementById("summaryBody");
+  const wordCountInfo = document.getElementById("wordCountInfo");
+  const btn = document.getElementById("summarizeBtn");
+
+  if(!paragraph) return;
+
+  btn.disabled = true;
+  summaryEl.classList.remove("show");
+  wordCountInfo.style.display = "none";
+  document.getElementById('comparisonChart').style.display = 'none';
+  summaryEl.innerHTML = '<span class="loader"></span> Summarizing...';
+
+  fetch("/summarize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paragraph, sentences })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.summary && data.summary.trim()) {
+      summaryEl.innerHTML = data.summary; // render HTML (with <strong>) from backend
+
+      // Show word count information if available
+      if (data.original_word_count !== undefined && data.summary_word_count !== undefined) {
+        document.getElementById("originalWordCount").textContent = data.original_word_count;
+        document.getElementById("summaryWordCount").textContent = data.summary_word_count;
+        document.getElementById("reductionPercentage").textContent = data.reduction_percentage + "%";
+        wordCountInfo.style.display = "flex";
+
+        // Update the comparison chart
+        updateChart(data.original_word_count, data.summary_word_count);
+      }
+    } else if (data.error) {
+      summaryEl.innerText = "Error: " + data.error;
+    } else {
+      summaryEl.innerText = "No summary returned.";
+    }
+    setTimeout(()=> summaryEl.classList.add("show"), 50);
+  })
+  .catch(err => {
+    console.error(err);
+    summaryEl.innerText = "Error generating summary.";
+  })
+  .finally(() => {
+    btn.disabled = false; 
+  });
+});
+</script>
+  <footer style="margin-top: 15px; margin-bottom: 40px; padding:10px; background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 5px; font-size: 14px; color: black; text-align: center;">
+      🔒 Built on Replit, safe & free to use — no downloads required.
+  </footer>
+
+</body>
+</html>
