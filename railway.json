@@ -4,5 +4,10 @@
   },
   "deploy": {
     "startCommand": "python main.py"
+  },
+  "phases": {
+    "build": {
+      "nixPkgs": ["python39"]
+    }
   }
 }
