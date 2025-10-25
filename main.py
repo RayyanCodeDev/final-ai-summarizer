@@ -8,8 +8,8 @@ import time
 import requests
 
     # FIX FOR sumy IN PYTHON 3.12
-    if not hasattr(collections, 'Sequence'):
-        collections.Sequence = collections.abc.Sequence
+if not hasattr(collections, 'Sequence'):
+    collections.Sequence = collections.abc.Sequence
 
     from flask import Flask, render_template, request, jsonify
     from sumy.parsers.plaintext import PlaintextParser
