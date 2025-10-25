@@ -1,11 +1,11 @@
-    import collections
-    import sys
-    import os
-    import re
-    import traceback
-    import threading
-    import time
-    import requests
+import collections
+import sys
+import os
+import re
+import traceback
+import threading
+import time
+import requests
 
     # FIX FOR sumy IN PYTHON 3.12
     if not hasattr(collections, 'Sequence'):
